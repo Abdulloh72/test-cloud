@@ -1,0 +1,33 @@
+name: Deploy Node.js backend to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodni yuklab olish
+        uses: actions/checkout@v3
+
+      - name: Fayllarni EC2 ga yuborish
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          source: "."
+          target: "~/backend-app"
+
+      - name: EC2 ichida ishga tushurish
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/backend-app
+            npm install
+            pm2 start server.js --name my-backend || pm2 restart my-backend
